@@ -1,0 +1,36 @@
+- name: Setup docker
+  hosts: all
+  tasks:
+    - file:
+          path: /etc/yum.repos.d/
+          state: directory
+    - copy:
+          src: "/etc/yum.repos.d/docker_install.repo"
+          dest: "/etc/yum.repos.d/docker_install.repo"
+    - package:
+          name: [ "docker-ce" , "docker-ce-cli" , "containerd.io" , "curl" ]
+          state: present
+      register: docker_inst_state
+    - service:
+          name: "docker"
+          state: started
+    - debug: 
+          var: docker_inst_state.stdout
+    - selinux:
+            policy: targeted
+            state: permissive 
+
+    - pip: 
+          name: docker
+    
+    - name: Re-create a html container
+      docker_container:
+          name: html 
+          image: niraj1102/simplehtml:v2
+          state: present
+          recreate: yes
+          exposed_ports:
+            - 80
+      register: x
+    - debug: 
+          var: x.stdout
